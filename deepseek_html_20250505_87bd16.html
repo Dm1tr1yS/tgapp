@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мастер маникюра - записи</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f8f8;
+            color: #222;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .container {
+            padding: 15px;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        @media (min-width: 768px) {
+            .container {
+                padding: 20px;
+                max-width: 1200px;
+            }
+        }
+        
+        /* Общие стили для заголовка */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .month-navigation {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .nav-button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            padding: 8px 12px;
+            cursor: pointer;
+            min-width: 40px;
+        }
+        .add-button {
+            padding: 10px 15px;
+            background-color: #2ea6ff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .month-title {
+            font-weight: 500;
+            font-size: 18px;
+            margin: 0;
+            min-width: 150px;
+            text-align: center;
+        }
+        
+        /* Стили таблицы для мобильных и десктопных устройств */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 10px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        @media (min-width: 768px) {
+            .table-responsive {
+                overflow-x: visible;
+            }
+        }
+        
+        .appointments-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            min-width: 600px;
+        }
+        @media (min-width: 768px) {
+            .appointments-table {
+                min-width: 100%;
+            }
+        }
+        
+        .appointments-table th {
+            position: sticky;
+            top: 0;
+            background-color: #f5f5f5;
+            font-weight: 500;
+            padding: 10px 5px;
+            font-size: 13px;
+            z-index: 10;
+        }
+        .appointments-table td {
+            padding: 5px;
+            height: 60px;
+            border: 1px solid #f0f0f0;
+            vertical-align: top;
+        }
+        .time-column {
+            position: sticky;
+            left: 0;
+            background-color: #f5f5f5;
+            font-weight: 500;
+            width: 60px;
+            min-width: 60px;
+            z-index: 5;
+            padding: 5px 8px !important;
+        }
+        .appointment-cell {
+            height: 100%;
+            padding: 2px;
+        }
+        .appointment-info {
+            background-color: #e3f2ff;
+            border-radius: 6px;
+            padding: 5px;
+            height: 100%;
+            font-size: 11px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .appointment-info:hover {
+            background-color: #d0e6ff;
+        }
+        .client-name {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .service-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .empty-cell {
+            background-color: #fafafa;
+        }
+        .date-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .date-day {
+            font-weight: bold;
+        }
+        .date-weekday {
+            font-size: 11px;
+            color: #666;
+        }
+        
+        /* Модальные окна */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 20px;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .form-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .save-btn {
+            background-color: #2ea6ff;
+            color: white;
+        }
+        .cancel-btn {
+            background-color: #f0f0f0;
+            color: #222;
+        }
+        
+        /* Улучшения для десктопной версии */
+        @media (min-width: 768px) {
+            .appointment-info {
+                padding: 8px;
+                font-size: 12px;
+            }
+            .appointments-table th {
+                padding: 12px 8px;
+            }
+            .appointments-table td {
+                height: 70px;
+            }
+            .time-column {
+                width: 80px;
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="main-view">
+            <div class="header">
+                <div style="display: flex; align-items: center;">
+                    <button class="nav-button" id="prev-month">‹</button>
+                    <h2 class="month-title" id="current-month">Май 2023</h2>
+                    <button class="nav-button" id="next-month">›</button>
+                </div>
+                <button class="add-button" id="add-appointment">+ Добавить запись</button>
+            </div>
+            
+            <div class="table-responsive">
+                <div id="appointments-table-container"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно создания записи -->
+    <div id="add-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0;">Новая запись</h3>
+            
+            <div class="form-group">
+                <label for="appointment-date">Дата</label>
+                <input type="date" id="appointment-date" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="appointment-time">Время</label>
+                <select id="appointment-time" required>
+                    <option value="">Выберите время</option>
+                    <option value="10:00">10:00</option>
+                    <option value="11:00">11:00</option>
+                    <option value="12:00">12:00</option>
+                    <option value="13:00">13:00</option>
+                    <option value="14:00">14:00</option>
+                    <option value="15:00">15:00</option>
+                    <option value="16:00">16:00</option>
+                    <option value="17:00">17:00</option>
+                    <option value="18:00">18:00</option>
+                    <option value="19:00">19:00</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="client-name">Имя клиента</label>
+                <input type="text" id="client-name" placeholder="Введите имя" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="client-phone">Телефон</label>
+                <input type="tel" id="client-phone" placeholder="Введите телефон" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="service">Услуга</label>
+                <select id="service" required>
+                    <option value="">Выберите услугу</option>
+                    <option value="1">Классический маникюр (1000 руб.)</option>
+                    <option value="2">Покрытие гель-лак (1500 руб.)</option>
+                    <option value="3">Наращивание ногтей (2500 руб.)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="notes">Примечания</label>
+                <textarea id="notes" rows="3" placeholder="Дополнительная информация"></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button class="cancel-btn" id="cancel-form">Отмена</button>
+                <button class="save-btn" id="save-appointment">Сохранить</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно просмотра записи -->
+    <div id="view-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0;">Детали записи</h3>
+            <div id="appointment-details"></div>
+            <div class="form-actions">
+                <button class="cancel-btn" id="close-view-modal">Закрыть</button>
+                <button class="save-btn" id="edit-appointment">Редактировать</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Проверяем, запущено ли приложение в Telegram WebApp
+        const isTelegramWebApp = () => {
+            return window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData;
+        };
+        
+        // Инициализация Telegram WebApp (если приложение запущено в Telegram)
+        if (isTelegramWebApp()) {
+            const tg = window.Telegram.WebApp;
+            tg.expand();
+            tg.enableClosingConfirmation();
+        }
+        
+        // Состояние приложения
+        const state = {
+            currentDate: new Date(),
+            appointments: [
+                {
+                    id: 1,
+                    date: getTodayDate(),
+                    time: '14:00',
+                    clientName: 'Анна Иванова',
+                    clientPhone: '+79161234567',
+                    serviceId: 2,
+                    serviceName: 'Покрытие гель-лак',
+                    price: 1500,
+                    notes: 'Цвет: красный'
+                },
+                {
+                    id: 2,
+                    date: getTodayDate(),
+                    time: '16:00',
+                    clientName: 'Мария Петрова',
+                    clientPhone: '+79167654321',
+                    serviceId: 1,
+                    serviceName: 'Классический маникюр',
+                    price: 1000,
+                    notes: ''
+                },
+                {
+                    id: 3,
+                    date: getNextDayDate(),
+                    time: '11:00',
+                    clientName: 'Елена Сидорова',
+                    clientPhone: '+79165554433',
+                    serviceId: 3,
+                    serviceName: 'Наращивание ногтей',
+                    price: 2500,
+                    notes: 'Форма: миндаль'
+                }
+            ],
+            services: [
+                { id: 1, name: "Классический маникюр", price: 1000 },
+                { id: 2, name: "Покрытие гель-лак", price: 1500 },
+                { id: 3, name: "Наращивание ногтей", price: 2500 }
+            ],
+            selectedAppointment: null
+        };
+        
+        // Вспомогательные функции
+        function getTodayDate() {
+            const today = new Date();
+            return today.toISOString().split('T')[0];
+        }
+        
+        function getNextDayDate() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            return tomorrow.toISOString().split('T')[0];
+        }
+        
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            const year = date.getFullYear();
+            return `${day < 10 ? '0' + day : day}.${month < 10 ? '0' + month : month}.${year}`;
+        }
+        
+        function formatTime(timeStr) {
+            return timeStr.replace(':00', '');
+        }
+        
+        // Инициализация приложения
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAppointmentsTable();
+            setupEventListeners();
+            
+            // Устанавливаем текущую дату в форме
+            document.getElementById('appointment-date').value = getTodayDate();
+            
+            // Обработчик изменения размера окна
+            window.addEventListener('resize', renderAppointmentsTable);
+        });
+        
+        function setupEventListeners() {
+            // Навигация по месяцам
+            document.getElementById('prev-month').addEventListener('click', () => {
+                state.currentDate.setMonth(state.currentDate.getMonth() - 1);
+                renderAppointmentsTable();
+            });
+            
+            document.getElementById('next-month').addEventListener('click', () => {
+                state.currentDate.setMonth(state.currentDate.getMonth() + 1);
+                renderAppointmentsTable();
+            });
+            
+            // Кнопка добавления записи
+            document.getElementById('add-appointment').addEventListener('click', () => {
+                document.getElementById('appointment-date').value = getTodayDate();
+                document.getElementById('appointment-time').value = '';
+                document.getElementById('client-name').value = '';
+                document.getElementById('client-phone').value = '';
+                document.getElementById('service').value = '';
+                document.getElementById('notes').value = '';
+                document.getElementById('add-modal').style.display = 'flex';
+            });
+            
+            // Кнопки формы
+            document.getElementById('cancel-form').addEventListener('click', () => {
+                document.getElementById('add-modal').style.display = 'none';
+            });
+            
+            document.getElementById('save-appointment').addEventListener('click', saveAppointment);
+            
+            // Кнопки просмотра записи
+            document.getElementById('close-view-modal').addEventListener('click', () => {
+                document.getElementById('view-modal').style.display = 'none';
+            });
+            
+            document.getElementById('edit-appointment').addEventListener('click', () => {
+                document.getElementById('view-modal').style.display = 'none';
+                // Здесь можно реализовать редактирование
+                alert('Редактирование записи (реализуйте эту функцию)');
+            });
+        }
+        
+        function renderAppointmentsTable() {
+            const container = document.getElementById('appointments-table-container');
+            const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", 
+                              "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+            
+            // Обновляем заголовок с месяцем и годом
+            document.getElementById('current-month').textContent = 
+                `${monthNames[state.currentDate.getMonth()]} ${state.currentDate.getFullYear()}`;
+            
+            // Получаем первый и последний день месяца
+            const firstDay = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth(), 1);
+            const lastDay = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth() + 1, 0);
+            
+            // Получаем количество дней в месяце
+            const daysInMonth = lastDay.getDate();
+            
+            // Создаем таблицу
+            let tableHTML = '<table class="appointments-table"><thead><tr><th class="time-column">Время</th>';
+            
+            // Добавляем заголовки столбцов с датами
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth(), day);
+                const dayOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'][date.getDay()];
+                
+                tableHTML += `
+                    <th>
+                        <div class="date-header">
+                            <div class="date-day">${day}</div>
+                            <div class="date-weekday">${dayOfWeek}</div>
+                        </div>
+                    </th>`;
+            }
+            
+            tableHTML += '</tr></thead><tbody>';
+            
+            // Временные слоты (каждый час с 10:00 до 19:00)
+            const timeSlots = [];
+            for (let hour = 10; hour <= 19; hour++) {
+                timeSlots.push(`${hour}:00`);
+            }
+            
+            // Добавляем строки с временами и записями
+            timeSlots.forEach(time => {
+                tableHTML += `<tr><td class="time-column">${formatTime(time)}</td>`;
+                
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = `${state.currentDate.getFullYear()}-${String(state.currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const appointmentsForCell = state.appointments.filter(a => a.date === dateStr && a.time === time);
+                    
+                    if (appointmentsForCell.length > 0) {
+                        const appointment = appointmentsForCell[0];
+                        tableHTML += `
+                            <td class="appointment-cell" data-date="${dateStr}" data-time="${time}">
+                                <div class="appointment-info">
+                                    <div class="client-name">${appointment.clientName}</div>
+                                    <div class="service-name">${appointment.serviceName}</div>
+                                    <div>${appointment.price} руб.</div>
+                                </div>
+                            </td>`;
+                    } else {
+                        tableHTML += `<td class="empty-cell" data-date="${dateStr}" data-time="${time}"></td>`;
+                    }
+                }
+                
+                tableHTML += '</tr>';
+            }
+            
+            tableHTML += '</tbody></table>';
+            container.innerHTML = tableHTML;
+            
+            // Добавляем обработчики кликов на ячейки
+            document.querySelectorAll('.appointment-info').forEach(cell => {
+                cell.addEventListener('click', function() {
+                    const row = this.closest('td');
+                    const date = row.getAttribute('data-date');
+                    const time = row.getAttribute('data-time');
+                    
+                    const appointment = state.appointments.find(a => a.date === date && a.time === time);
+                    if (appointment) {
+                        state.selectedAppointment = appointment;
+                        showAppointmentDetails(appointment);
+                    }
+                });
+            });
+        }
+        
+        function showAppointmentDetails(appointment) {
+            const details = document.getElementById('appointment-details');
+            details.innerHTML = `
+                <p><strong>Дата:</strong> ${formatDate(appointment.date)}</p>
+                <p><strong>Время:</strong> ${appointment.time}</p>
+                <p><strong>Клиент:</strong> ${appointment.clientName}</p>
+                <p><strong>Телефон:</strong> ${appointment.clientPhone}</p>
+                <p><strong>Услуга:</strong> ${appointment.serviceName}</p>
+                <p><strong>Цена:</strong> ${appointment.price} руб.</p>
+                ${appointment.notes ? `<p><strong>Примечания:</strong> ${appointment.notes}</p>` : ''}
+            `;
+            
+            document.getElementById('view-modal').style.display = 'flex';
+        }
+        
+        function saveAppointment() {
+            // Получаем данные из формы
+            const date = document.getElementById('appointment-date').value;
+            const time = document.getElementById('appointment-time').value;
+            const clientName = document.getElementById('client-name').value;
+            const clientPhone = document.getElementById('client-phone').value;
+            const serviceId = parseInt(document.getElementById('service').value);
+            const notes = document.getElementById('notes').value;
+            
+            // Проверяем заполненность полей
+            if (!date || !time || !clientName || !clientPhone || !serviceId) {
+                alert('Пожалуйста, заполните все обязательные поля');
+                return;
+            }
+            
+            // Проверяем, не занято ли уже это время
+            const isTimeTaken = state.appointments.some(a => a.date === date && a.time === time);
+            if (isTimeTaken) {
+                alert('Это время уже занято другой записью');
+                return;
+            }
+            
+            // Находим выбранную услугу
+            const selectedService = state.services.find(s => s.id === serviceId);
+            
+            // Создаем новую запись
+            const newAppointment = {
+                id: Date.now(),
+                date: date,
+                time: time,
+                clientName: clientName,
+                clientPhone: clientPhone,
+                serviceId: serviceId,
+                serviceName: selectedService.name,
+                price: selectedService.price,
+                notes: notes
+            };
+            
+            // Добавляем запись
+            state.appointments.push(newAppointment);
+            
+            // Закрываем модальное окно
+            document.getElementById('add-modal').style.display = 'none';
+            
+            // Обновляем таблицу
+            renderAppointmentsTable();
+            
+            // Отправляем данные на сервер (если приложение запущено в Telegram)
+            if (isTelegramWebApp()) {
+                sendAppointmentToServer(newAppointment);
+            }
+        }
+        
+        function sendAppointmentToServer(appointment) {
+            // В реальном приложении здесь будет AJAX-запрос к вашему бэкенду
+            console.log('Отправка записи на сервер:', appointment);
+            
+            // Пример отправки данных через Telegram WebApp
+            Telegram.WebApp.sendData(JSON.stringify({
+                type: 'new_appointment',
+                data: appointment
+            }));
+        }
+    </script>
+</body>
+</html>
