@@ -321,21 +321,25 @@
 
         <script>
             // Проверка загрузки скрипта
-            console.log('Script loaded successfully');
+            console.log("Script loaded successfully");
 
             // Проверяем, запущено ли приложение в Telegram WebApp
             const isTelegramWebApp = () => {
-                return window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData;
+                return (
+                    window.Telegram &&
+                    window.Telegram.WebApp &&
+                    window.Telegram.WebApp.initData
+                );
             };
 
             // Инициализация Telegram WebApp (если приложение запущено в Telegram)
             if (isTelegramWebApp()) {
-                console.log('Running in Telegram WebApp');
+                console.log("Running in Telegram WebApp");
                 const tg = window.Telegram.WebApp;
                 tg.expand();
                 tg.enableClosingConfirmation();
             } else {
-                console.log('Running in browser');
+                console.log("Running in browser");
             }
 
             // Состояние приложения с тестовыми данными
@@ -344,88 +348,126 @@
                 appointments: [
                     {
                         id: 1,
-                        date: new Date().toISOString().split('T')[0], // Сегодня
-                        time: '14:00',
-                        clientName: 'Анна Иванова',
-                        clientPhone: '+79161234567',
+                        date: new Date().toISOString().split("T")[0], // Сегодня
+                        time: "14:00",
+                        clientName: "Анна Иванова",
+                        clientPhone: "+79161234567",
                         serviceId: 2,
-                        serviceName: 'Покрытие гель-лак',
+                        serviceName: "Покрытие гель-лак",
                         price: 1500,
-                        notes: 'Цвет: красный'
+                        notes: "Цвет: красный",
                     },
                     {
                         id: 2,
-                        date: new Date().toISOString().split('T')[0], // Сегодня
-                        time: '16:00',
-                        clientName: 'Мария Петрова',
-                        clientPhone: '+79167654321',
+                        date: new Date().toISOString().split("T")[0], // Сегодня
+                        time: "16:00",
+                        clientName: "Мария Петрова",
+                        clientPhone: "+79167654321",
                         serviceId: 1,
-                        serviceName: 'Классический маникюр',
+                        serviceName: "Классический маникюр",
                         price: 1000,
-                        notes: ''
-                    }
+                        notes: "",
+                    },
                 ],
                 services: [
                     { id: 1, name: "Классический маникюр", price: 1000 },
                     { id: 2, name: "Покрытие гель-лак", price: 1500 },
-                    { id: 3, name: "Наращивание ногтей", price: 2500 }
+                    { id: 3, name: "Наращивание ногтей", price: 2500 },
                 ],
-                selectedAppointment: null
+                selectedAppointment: null,
             };
 
-            console.log('Initial state:', state);
+            console.log("Initial state:", state);
 
             // Вспомогательные функции
             function getTodayDate() {
                 const today = new Date();
-                return today.toISOString().split('T')[0];
+                return today.toISOString().split("T")[0];
             }
 
             function formatDate(dateStr) {
                 const date = new Date(dateStr);
                 const day = date.getDate();
                 const month = date.getMonth() + 1;
-                return `${day < 10 ? '0' + day : day}.${month < 10 ? '0' + month : month}.${date.getFullYear()}`;
+                return `${day < 10 ? "0" + day : day}.${
+                    month < 10 ? "0" + month : month
+                }.${date.getFullYear()}`;
             }
 
             function formatTime(timeStr) {
-                return timeStr.replace(':00', '');
+                return timeStr.replace(":00", "");
             }
 
             // Основные функции приложения
             function renderAppointmentsTable() {
-                console.log('Rendering appointments table');
+                console.log("Rendering appointments table");
 
                 try {
-                    const container = document.getElementById('appointments-table-container');
+                    const container = document.getElementById(
+                        "appointments-table-container"
+                    );
                     if (!container) {
-                        throw new Error('Table container not found');
+                        throw new Error("Table container not found");
                     }
 
-                    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
-                                      "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+                    const monthNames = [
+                        "Январь",
+                        "Февраль",
+                        "Март",
+                        "Апрель",
+                        "Май",
+                        "Июнь",
+                        "Июль",
+                        "Август",
+                        "Сентябрь",
+                        "Октябрь",
+                        "Ноябрь",
+                        "Декабрь",
+                    ];
 
                     // Обновляем заголовок с месяцем и годом
-                    const monthTitle = document.getElementById('current-month');
+                    const monthTitle = document.getElementById("current-month");
                     if (monthTitle) {
-                        monthTitle.textContent =
-                            `${monthNames[state.currentDate.getMonth()]} ${state.currentDate.getFullYear()}`;
+                        monthTitle.textContent = `${
+                            monthNames[state.currentDate.getMonth()]
+                        } ${state.currentDate.getFullYear()}`;
                     }
 
                     // Получаем первый и последний день месяца
-                    const firstDay = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth(), 1);
-                    const lastDay = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth() + 1, 0);
+                    const firstDay = new Date(
+                        state.currentDate.getFullYear(),
+                        state.currentDate.getMonth(),
+                        1
+                    );
+                    const lastDay = new Date(
+                        state.currentDate.getFullYear(),
+                        state.currentDate.getMonth() + 1,
+                        0
+                    );
 
                     // Получаем количество дней в месяце
                     const daysInMonth = lastDay.getDate();
 
                     // Создаем таблицу
-                    let tableHTML = '<table class="appointments-table"><thead><tr><th class="time-column">Время</th>';
+                    let tableHTML =
+                        '<table class="appointments-table"><thead><tr><th class="time-column">Время</th>';
 
                     // Добавляем заголовки столбцов с датами
                     for (let day = 1; day <= daysInMonth; day++) {
-                        const date = new Date(state.currentDate.getFullYear(), state.currentDate.getMonth(), day);
-                        const dayOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'][date.getDay()];
+                        const date = new Date(
+                            state.currentDate.getFullYear(),
+                            state.currentDate.getMonth(),
+                            day
+                        );
+                        const dayOfWeek = [
+                            "Вс",
+                            "Пн",
+                            "Вт",
+                            "Ср",
+                            "Чт",
+                            "Пт",
+                            "Сб",
+                        ][date.getDay()];
 
                         tableHTML += `
                             <th>
@@ -436,7 +478,7 @@
                             </th>`;
                     }
 
-                    tableHTML += '</tr></thead><tbody>';
+                    tableHTML += "</tr></thead><tbody>";
 
                     // Временные слоты (каждый час с 10:00 до 19:00)
                     const timeSlots = [];
@@ -445,12 +487,22 @@
                     }
 
                     // Добавляем строки с временами и записями
-                    timeSlots.forEach(time => {
-                        tableHTML += `<tr><td class="time-column">${formatTime(time)}</td>`;
+                    timeSlots.forEach((time) => {
+                        tableHTML += `<tr><td class="time-column">${formatTime(
+                            time
+                        )}</td>`;
 
                         for (let day = 1; day <= daysInMonth; day++) {
-                            const dateStr = `${state.currentDate.getFullYear()}-${String(state.currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                            const appointmentsForCell = state.appointments.filter(a => a.date === dateStr && a.time === time);
+                            const dateStr = `${state.currentDate.getFullYear()}-${String(
+                                state.currentDate.getMonth() + 1
+                            ).padStart(2, "0")}-${String(day).padStart(
+                                2,
+                                "0"
+                            )}`;
+                            const appointmentsForCell =
+                                state.appointments.filter(
+                                    (a) => a.date === dateStr && a.time === time
+                                );
 
                             if (appointmentsForCell.length > 0) {
                                 const appointment = appointmentsForCell[0];
@@ -467,84 +519,119 @@
                             }
                         }
 
-                        tableHTML += '</tr>';
-                    }
+                        tableHTML += "</tr>";
+                    });
 
-                    tableHTML += '</tbody></table>';
+                    tableHTML += "</tbody></table>";
                     container.innerHTML = tableHTML;
 
                     // Добавляем обработчики кликов на ячейки
-                    document.querySelectorAll('.appointment-info').forEach(cell => {
-                        cell.addEventListener('click', function() {
-                            const row = this.closest('td');
-                            const date = row.getAttribute('data-date');
-                            const time = row.getAttribute('data-time');
+                    document
+                        .querySelectorAll(".appointment-info")
+                        .forEach((cell) => {
+                            cell.addEventListener("click", function () {
+                                const row = this.closest("td");
+                                const date = row.getAttribute("data-date");
+                                const time = row.getAttribute("data-time");
 
-                            const appointment = state.appointments.find(a => a.date === date && a.time === time);
-                            if (appointment) {
-                                showAppointmentDetails(appointment);
-                            }
+                                const appointment = state.appointments.find(
+                                    (a) => a.date === date && a.time === time
+                                );
+                                if (appointment) {
+                                    showAppointmentDetails(appointment);
+                                }
+                            });
                         });
-                    });
 
-                    console.log('Table rendered successfully');
+                    console.log("Table rendered successfully");
                 } catch (error) {
-                    console.error('Error rendering table:', error);
+                    console.error("Error rendering table:", error);
                 }
             }
 
             function showAppointmentDetails(appointment) {
-                console.log('Showing appointment details:', appointment);
+                console.log("Showing appointment details:", appointment);
                 try {
-                    const details = document.getElementById('appointment-details');
+                    const details = document.getElementById(
+                        "appointment-details"
+                    );
                     if (!details) {
-                        throw new Error('Details container not found');
+                        throw new Error("Details container not found");
                     }
 
                     details.innerHTML = `
-                        <p><strong>Дата:</strong> ${formatDate(appointment.date)}</p>
+                        <p><strong>Дата:</strong> ${formatDate(
+                            appointment.date
+                        )}</p>
                         <p><strong>Время:</strong> ${appointment.time}</p>
-                        <p><strong>Клиент:</strong> ${appointment.clientName}</p>
-                        <p><strong>Телефон:</strong> ${appointment.clientPhone}</p>
-                        <p><strong>Услуга:</strong> ${appointment.serviceName}</p>
+                        <p><strong>Клиент:</strong> ${
+                            appointment.clientName
+                        }</p>
+                        <p><strong>Телефон:</strong> ${
+                            appointment.clientPhone
+                        }</p>
+                        <p><strong>Услуга:</strong> ${
+                            appointment.serviceName
+                        }</p>
                         <p><strong>Цена:</strong> ${appointment.price} руб.</p>
-                        ${appointment.notes ? `<p><strong>Примечания:</strong> ${appointment.notes}</p>` : ''}
+                        ${
+                            appointment.notes
+                                ? `<p><strong>Примечания:</strong> ${appointment.notes}</p>`
+                                : ""
+                        }
                     `;
 
-                    document.getElementById('view-modal').style.display = 'flex';
+                    document.getElementById("view-modal").style.display =
+                        "flex";
                 } catch (error) {
-                    console.error('Error showing details:', error);
+                    console.error("Error showing details:", error);
                 }
             }
 
             function saveAppointment() {
-                console.log('Saving new appointment');
+                console.log("Saving new appointment");
                 try {
                     // Получаем данные из формы
-                    const date = document.getElementById('appointment-date').value;
-                    const time = document.getElementById('appointment-time').value;
-                    const clientName = document.getElementById('client-name').value;
-                    const clientPhone = document.getElementById('client-phone').value;
-                    const serviceId = parseInt(document.getElementById('service').value);
-                    const notes = document.getElementById('notes').value;
+                    const date =
+                        document.getElementById("appointment-date").value;
+                    const time =
+                        document.getElementById("appointment-time").value;
+                    const clientName =
+                        document.getElementById("client-name").value;
+                    const clientPhone =
+                        document.getElementById("client-phone").value;
+                    const serviceId = parseInt(
+                        document.getElementById("service").value
+                    );
+                    const notes = document.getElementById("notes").value;
 
                     // Проверяем заполненность полей
-                    if (!date || !time || !clientName || !clientPhone || !serviceId) {
-                        alert('Пожалуйста, заполните все обязательные поля');
+                    if (
+                        !date ||
+                        !time ||
+                        !clientName ||
+                        !clientPhone ||
+                        !serviceId
+                    ) {
+                        alert("Пожалуйста, заполните все обязательные поля");
                         return;
                     }
 
                     // Проверяем, не занято ли уже это время
-                    const isTimeTaken = state.appointments.some(a => a.date === date && a.time === time);
+                    const isTimeTaken = state.appointments.some(
+                        (a) => a.date === date && a.time === time
+                    );
                     if (isTimeTaken) {
-                        alert('Это время уже занято другой записью');
+                        alert("Это время уже занято другой записью");
                         return;
                     }
 
                     // Находим выбранную услугу
-                    const selectedService = state.services.find(s => s.id === serviceId);
+                    const selectedService = state.services.find(
+                        (s) => s.id === serviceId
+                    );
                     if (!selectedService) {
-                        alert('Ошибка: услуга не найдена');
+                        alert("Ошибка: услуга не найдена");
                         return;
                     }
 
@@ -558,89 +645,112 @@
                         serviceId: serviceId,
                         serviceName: selectedService.name,
                         price: selectedService.price,
-                        notes: notes
+                        notes: notes,
                     };
 
                     // Добавляем запись
                     state.appointments.push(newAppointment);
-                    console.log('New appointment added:', newAppointment);
+                    console.log("New appointment added:", newAppointment);
 
                     // Закрываем модальное окно
-                    document.getElementById('add-modal').style.display = 'none';
+                    document.getElementById("add-modal").style.display = "none";
 
                     // Обновляем таблицу
                     renderAppointmentsTable();
 
                     // Очищаем форму
-                    document.getElementById('client-name').value = '';
-                    document.getElementById('client-phone').value = '';
-                    document.getElementById('notes').value = '';
+                    document.getElementById("client-name").value = "";
+                    document.getElementById("client-phone").value = "";
+                    document.getElementById("notes").value = "";
 
                     // Отправляем данные на сервер (если приложение запущено в Telegram)
                     if (isTelegramWebApp()) {
-                        Telegram.WebApp.sendData(JSON.stringify({
-                            type: 'new_appointment',
-                            data: newAppointment
-                        }));
+                        Telegram.WebApp.sendData(
+                            JSON.stringify({
+                                type: "new_appointment",
+                                data: newAppointment,
+                            })
+                        );
                     }
                 } catch (error) {
-                    console.error('Error saving appointment:', error);
-                    alert('Произошла ошибка при сохранении записи');
+                    console.error("Error saving appointment:", error);
+                    alert("Произошла ошибка при сохранении записи");
                 }
             }
 
             function setupEventListeners() {
-                console.log('Setting up event listeners');
+                console.log("Setting up event listeners");
                 try {
                     // Навигация по месяцам
-                    document.getElementById('prev-month').addEventListener('click', () => {
-                        state.currentDate.setMonth(state.currentDate.getMonth() - 1);
-                        renderAppointmentsTable();
-                    });
+                    document
+                        .getElementById("prev-month")
+                        .addEventListener("click", () => {
+                            state.currentDate.setMonth(
+                                state.currentDate.getMonth() - 1
+                            );
+                            renderAppointmentsTable();
+                        });
 
-                    document.getElementById('next-month').addEventListener('click', () => {
-                        state.currentDate.setMonth(state.currentDate.getMonth() + 1);
-                        renderAppointmentsTable();
-                    });
+                    document
+                        .getElementById("next-month")
+                        .addEventListener("click", () => {
+                            state.currentDate.setMonth(
+                                state.currentDate.getMonth() + 1
+                            );
+                            renderAppointmentsTable();
+                        });
 
                     // Кнопка добавления записи
-                    document.getElementById('add-appointment').addEventListener('click', () => {
-                        document.getElementById('appointment-date').value = getTodayDate();
-                        document.getElementById('appointment-time').value = '';
-                        document.getElementById('client-name').value = '';
-                        document.getElementById('client-phone').value = '';
-                        document.getElementById('service').value = '';
-                        document.getElementById('notes').value = '';
-                        document.getElementById('add-modal').style.display = 'flex';
-                    });
+                    document
+                        .getElementById("add-appointment")
+                        .addEventListener("click", () => {
+                            document.getElementById("appointment-date").value =
+                                getTodayDate();
+                            document.getElementById("appointment-time").value =
+                                "";
+                            document.getElementById("client-name").value = "";
+                            document.getElementById("client-phone").value = "";
+                            document.getElementById("service").value = "";
+                            document.getElementById("notes").value = "";
+                            document.getElementById("add-modal").style.display =
+                                "flex";
+                        });
 
                     // Кнопки формы
-                    document.getElementById('cancel-form').addEventListener('click', () => {
-                        document.getElementById('add-modal').style.display = 'none';
-                    });
+                    document
+                        .getElementById("cancel-form")
+                        .addEventListener("click", () => {
+                            document.getElementById("add-modal").style.display =
+                                "none";
+                        });
 
-                    document.getElementById('save-appointment').addEventListener('click', saveAppointment);
+                    document
+                        .getElementById("save-appointment")
+                        .addEventListener("click", saveAppointment);
                 } catch (error) {
-                    console.error('Error setting up event listeners:', error);
+                    console.error("Error setting up event listeners:", error);
                 }
             }
 
             // Инициализация приложения
             function initApp() {
-                console.log('Initializing application');
+                console.log("Initializing application");
                 try {
                     renderAppointmentsTable();
                     setupEventListeners();
-                    document.getElementById('appointment-date').value = getTodayDate();
-                    console.log('Application initialized successfully');
+                    document.getElementById("appointment-date").value =
+                        getTodayDate();
+                    console.log("Application initialized successfully");
                 } catch (error) {
-                    console.error('Initialization error:', error);
-                    alert('Ошибка инициализации приложения. Проверьте консоль.');
+                    console.error("Initialization error:", error);
+                    alert(
+                        "Ошибка инициализации приложения. Проверьте консоль."
+                    );
                 }
             }
 
             // Запускаем приложение после загрузки DOM
-            document.addEventListener('DOMContentLoaded', initApp);
+            document.addEventListener("DOMContentLoaded", initApp);
         </script>
     </body>
 </html>
