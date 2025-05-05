@@ -17,7 +17,30 @@ const state = {
 
 function initApp() {
     console.log("App initialized");
-    // Ваши функции
+    // Основные функции
+    function renderAppointmentsTable() {
+        const container = document.getElementById(
+            "appointments-table-container"
+        );
+        if (!container) return;
+
+        let tableHTML = '<table class="appointments-table">...';
+        container.innerHTML = tableHTML;
+    }
+
+    function setupEventListeners() {
+        document
+            .getElementById("add-appointment")
+            .addEventListener("click", () => {
+                document.getElementById("add-modal").style.display = "flex";
+            });
+    }
 }
+
+// Инициализация
+document.addEventListener("DOMContentLoaded", () => {
+    renderAppointmentsTable();
+    setupEventListeners();
+});
 
 document.addEventListener("DOMContentLoaded", initApp);
