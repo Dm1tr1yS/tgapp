@@ -6,262 +6,204 @@ const state = {
             id: 1,
             date: new Date().toISOString().split("T")[0],
             time: "14:00",
-            clientName: "Анна Иванова",
+            clientName: "Тестовый клиент",
             clientPhone: "+79161234567",
-            serviceId: 2,
-            serviceName: "Покрытие гель-лак",
-            price: 1500,
-            notes: "Цвет: красный",
+            serviceId: 1,
+            serviceName: "Маникюр",
+            price: 1000,
+            notes: "",
         },
     ],
     services: [
-        { id: 1, name: "Классический маникюр", price: 1000 },
+        { id: 1, name: "Маникюр", price: 1000 },
         { id: 2, name: "Покрытие гель-лак", price: 1500 },
-        { id: 3, name: "Наращивание ногтей", price: 2500 },
     ],
-    editingAppointment: null,
-    editMode: false,
+    currentEditId: null,
 };
 
-// Добавляем эту функцию в начало файла
-function formatDate(date) {
-    const d = new Date(date);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-        2,
-        "0"
-    )}-${String(d.getDate()).padStart(2, "0")}`;
+// Инициализация
+document.addEventListener("DOMContentLoaded", () => {
+    initApp();
+});
+
+function initApp() {
+    renderAppointmentsTable();
+    setupEventListeners();
+    console.log("Приложение инициализировано");
 }
 
+// Рендер таблицы с обработчиками редактирования
 function renderAppointmentsTable() {
-    console.log("Начало рендеринга таблицы");
     const container = document.getElementById("appointments-table-container");
-    if (!container) {
-        console.error("Ошибка: Контейнер таблицы не найден");
-        return;
-    }
+    if (!container) return;
 
-    // Очищаем контейнер
     container.innerHTML = "";
-
     const table = document.createElement("table");
     table.className = "appointments-table";
 
     // Шапка таблицы
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
+    headerRow.innerHTML = `
+        <th class="time-column">Время</th>
+        ${generateDateHeaders()}
+    `;
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
 
-    // Колонка времени
-    const timeHeader = document.createElement("th");
-    timeHeader.className = "time-column";
-    timeHeader.textContent = "Время";
-    headerRow.appendChild(timeHeader);
+    // Тело таблицы
+    const tbody = document.createElement("tbody");
+    for (let hour = 10; hour <= 19; hour++) {
+        const time = `${hour}:00`;
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td class="time-column">${time}</td>
+            ${generateDayCells(time)}
+        `;
+        tbody.appendChild(row);
+    }
+    table.appendChild(tbody);
+    container.appendChild(table);
+}
 
-    // Получаем количество дней в месяце
+function generateDateHeaders() {
+    let headers = "";
     const daysInMonth = new Date(
         state.currentDate.getFullYear(),
         state.currentDate.getMonth() + 1,
         0
     ).getDate();
-    console.log(`Дней в месяце: ${daysInMonth}`);
 
-    // Добавляем заголовки с датами
     for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(
             state.currentDate.getFullYear(),
             state.currentDate.getMonth(),
             day
         );
-        const th = document.createElement("th");
-        th.innerHTML = `
-            <div class="date-header">
-                <div class="date-day">${day}</div>
-                <div class="date-weekday">
-                    ${["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"][date.getDay()]}
+        headers += `
+            <th>
+                <div class="date-header">
+                    <div class="date-day">${day}</div>
+                    <div class="date-weekday">${
+                        ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"][
+                            date.getDay()
+                        ]
+                    }</div>
                 </div>
-            </div>
+            </th>
         `;
-        headerRow.appendChild(th);
     }
+    return headers;
+}
 
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
+function generateDayCells(time) {
+    let cells = "";
+    const daysInMonth = new Date(
+        state.currentDate.getFullYear(),
+        state.currentDate.getMonth() + 1,
+        0
+    ).getDate();
 
-    // Тело таблицы
-    const tbody = document.createElement("tbody");
-
-    // Генерируем временные слоты (10:00 - 19:00)
-    for (let hour = 10; hour <= 19; hour++) {
-        const time = `${hour}:00`; // Определяем time здесь!
-        console.log(`Обработка времени: ${time}`);
-
-        const row = document.createElement("tr");
-
-        // Ячейка времени
-        const timeCell = document.createElement("td");
-        timeCell.className = "time-column";
-        timeCell.textContent = time;
-        row.appendChild(timeCell);
-
-        // Ячейки с записями
-        for (let day = 1; day <= daysInMonth; day++) {
-            const currentDate = new Date(
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = formatDate(
+            new Date(
                 state.currentDate.getFullYear(),
                 state.currentDate.getMonth(),
                 day
-            );
-            const dateStr = formatDate(currentDate);
+            )
+        );
 
-            const cell = document.createElement("td");
-            cell.className = "appointment-cell";
+        const appointment = state.appointments.find(
+            (a) => a.date === dateStr && a.time === time
+        );
 
-            // Ищем запись для этой даты и времени
-            const appointment = state.appointments.find(
-                (a) => a.date === dateStr && a.time === time
-            );
-
-            if (appointment) {
-                console.log(
-                    `Найдена запись: ${appointment.clientName} в ${dateStr} ${time}`
-                );
-                cell.innerHTML = `
+        cells += `
+            <td class="appointment-cell" 
+                data-date="${dateStr}" 
+                data-time="${time}"
+                ${appointment ? `data-id="${appointment.id}"` : ""}>
+                ${
+                    appointment
+                        ? `
                     <div class="appointment-info">
                         <div class="client-name">${appointment.clientName}</div>
                         <div class="service-name">${appointment.serviceName}</div>
                         <div>${appointment.price} руб.</div>
                     </div>
-                `;
-            }
-
-            row.appendChild(cell);
-        }
-
-        tbody.appendChild(row);
+                `
+                        : ""
+                }
+            </td>
+        `;
     }
-
-    table.appendChild(tbody);
-    container.appendChild(table);
-    console.log("Таблица успешно отрендерена");
+    return cells;
 }
 
-// Инициализация приложения
-document.addEventListener("DOMContentLoaded", () => {
-    console.log("Документ загружен");
-
-    // Проверка состояния
-    console.log("Текущее состояние:", state);
-
-    renderAppointmentsTable();
-    setupEventListeners();
-});
-
+// Обработчики событий
 function setupEventListeners() {
-    // Навигация по месяцам
-    document.getElementById("prev-month").addEventListener("click", () => {
-        state.currentDate.setMonth(state.currentDate.getMonth() - 1);
-        renderAppointmentsTable();
-    });
+    // Клик по ячейке таблицы
+    document.addEventListener("click", (e) => {
+        const cell = e.target.closest(".appointment-cell");
+        if (!cell) return;
 
-    document.getElementById("next-month").addEventListener("click", () => {
-        state.currentDate.setMonth(state.currentDate.getMonth() + 1);
-        renderAppointmentsTable();
-    });
+        const appointmentId = cell.dataset.id;
+        if (!appointmentId) return;
 
-    // Кнопка добавления записи
-    document.getElementById("add-appointment").addEventListener("click", () => {
-        document.getElementById("appointment-date").value = new Date()
-            .toISOString()
-            .split("T")[0];
-        document.getElementById("add-modal").style.display = "flex";
-    });
-
-    // Кнопка отмены
-    document.getElementById("cancel-form").addEventListener("click", () => {
-        document.getElementById("add-modal").style.display = "none";
+        showEditPopup(cell, parseInt(appointmentId));
     });
 
     // Сохранение записи
     document
         .getElementById("save-appointment")
-        .addEventListener("click", () => {
-            const date = document.getElementById("appointment-date").value;
-            const time = document.getElementById("appointment-time").value;
-            const clientName = document.getElementById("client-name").value;
-            const clientPhone = document.getElementById("client-phone").value;
-            const serviceId = parseInt(
-                document.getElementById("service").value
-            );
+        .addEventListener("click", saveAppointment);
 
-            if (!date || !time || !clientName || !clientPhone || !serviceId) {
-                alert("Заполните все поля");
-                return;
-            }
-
-            const service = state.services.find((s) => s.id === serviceId);
-            const newAppointment = {
-                id: Date.now(),
-                date,
-                time,
-                clientName,
-                clientPhone,
-                serviceId,
-                serviceName: service.name,
-                price: service.price,
-            };
-
-            state.appointments.push(newAppointment);
-            document.getElementById("add-modal").style.display = "none";
-            renderAppointmentsTable();
-        });
+    // Отмена редактирования
+    document.getElementById("cancel-form").addEventListener("click", () => {
+        document.getElementById("add-modal").style.display = "none";
+        state.currentEditId = null;
+    });
 }
 
-// Новая функция для показа кнопки редактирования
-function showEditButton(cell, appointment) {
-    // Удаляем старую кнопку, если есть
-    document
-        .querySelectorAll(".edit-btn-container")
-        .forEach((el) => el.remove());
+// Показ попапа редактирования
+function showEditPopup(cell, appointmentId) {
+    const popup = document.createElement("div");
+    popup.className = "edit-popup";
+    popup.innerHTML = `
+        <button class="edit-btn">✏️ Редактировать</button>
+    `;
 
-    // Создаем контейнер для кнопки
-    const btnContainer = document.createElement("div");
-    btnContainer.className = "edit-btn-container";
-
-    // Позиционируем относительно ячейки
     const rect = cell.getBoundingClientRect();
-    btnContainer.style.position = "absolute";
-    btnContainer.style.left = `${rect.left + window.scrollX}px`;
-    btnContainer.style.top = `${rect.top + window.scrollY - 40}px`;
+    popup.style.position = "absolute";
+    popup.style.left = `${rect.left}px`;
+    popup.style.top = `${rect.top - 40}px`;
 
-    // Создаем кнопку
-    const editBtn = document.createElement("button");
-    editBtn.className = "edit-btn";
-    editBtn.innerHTML = "✏️ Редактировать";
-
-    editBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        openEditModal(appointment);
-        btnContainer.remove();
+    popup.querySelector(".edit-btn").addEventListener("click", () => {
+        openEditForm(appointmentId);
+        popup.remove();
     });
 
-    btnContainer.appendChild(editBtn);
-    document.body.appendChild(btnContainer);
+    document.body.appendChild(popup);
 
-    // Закрываем по клику вне кнопки
-    const closeHandler = () => {
-        btnContainer.remove();
-        document.removeEventListener("click", closeHandler);
-    };
-
+    // Закрытие при клике вне попапа
     setTimeout(() => {
+        const closeHandler = (e) => {
+            if (!popup.contains(e.target)) {
+                popup.remove();
+                document.removeEventListener("click", closeHandler);
+            }
+        };
         document.addEventListener("click", closeHandler);
     }, 100);
 }
 
-// Функция для открытия модального окна редактирования
-function openEditModal(appointment) {
-    state.editingAppointment = appointment;
-    state.editMode = true;
+// Открытие формы редактирования
+function openEditForm(appointmentId) {
+    const appointment = state.appointments.find((a) => a.id === appointmentId);
+    if (!appointment) return;
 
-    // Заполняем форму данными
+    state.currentEditId = appointmentId;
+
+    // Заполняем форму
     document.getElementById("appointment-date").value = appointment.date;
     document.getElementById("appointment-time").value = appointment.time;
     document.getElementById("client-name").value = appointment.clientName;
@@ -275,55 +217,51 @@ function openEditModal(appointment) {
         "Редактировать запись";
 }
 
-// Обновляем обработчик сохранения
-document.getElementById("save-appointment").addEventListener("click", () => {
-    const date = document.getElementById("appointment-date").value;
-    const time = document.getElementById("appointment-time").value;
-    const clientName = document.getElementById("client-name").value;
-    const clientPhone = document.getElementById("client-phone").value;
-    const serviceId = parseInt(document.getElementById("service").value);
-    const notes = document.getElementById("notes").value;
+// Сохранение изменений
+function saveAppointment() {
+    const formData = {
+        date: document.getElementById("appointment-date").value,
+        time: document.getElementById("appointment-time").value,
+        clientName: document.getElementById("client-name").value,
+        clientPhone: document.getElementById("client-phone").value,
+        serviceId: parseInt(document.getElementById("service").value),
+        notes: document.getElementById("notes").value,
+    };
 
-    if (state.editingAppointment) {
-        // Редактируем существующую запись
-        const service = state.services.find((s) => s.id === serviceId);
-        Object.assign(state.editingAppointment, {
-            date,
-            time,
-            clientName,
-            clientPhone,
-            serviceId,
-            serviceName: service.name,
-            price: service.price,
-            notes,
-        });
+    if (state.currentEditId) {
+        // Редактирование существующей записи
+        const index = state.appointments.findIndex(
+            (a) => a.id === state.currentEditId
+        );
+        if (index !== -1) {
+            const service = state.services.find(
+                (s) => s.id === formData.serviceId
+            );
+            state.appointments[index] = {
+                ...state.appointments[index],
+                ...formData,
+                serviceName: service.name,
+                price: service.price,
+            };
+        }
     } else {
-        // Создаем новую запись
-        const service = state.services.find((s) => s.id === serviceId);
-        const newAppointment = {
+        // Создание новой записи
+        const service = state.services.find((s) => s.id === formData.serviceId);
+        state.appointments.push({
             id: Date.now(),
-            date,
-            time,
-            clientName,
-            clientPhone,
-            serviceId,
+            ...formData,
             serviceName: service.name,
             price: service.price,
-            notes,
-        };
-        state.appointments.push(newAppointment);
+        });
     }
 
-    // Закрываем модальное окно и обновляем таблицу
+    // Закрываем форму и обновляем таблицу
     document.getElementById("add-modal").style.display = "none";
-    state.editingAppointment = null;
-    state.editMode = false;
+    state.currentEditId = null;
     renderAppointmentsTable();
-});
+}
 
-// Обработчик отмены редактирования
-document.getElementById("cancel-form").addEventListener("click", () => {
-    state.editingAppointment = null;
-    state.editMode = false;
-    document.getElementById("add-modal").style.display = "none";
-});
+// Вспомогательные функции
+function formatDate(date) {
+    return date.toISOString().split("T")[0];
+}
