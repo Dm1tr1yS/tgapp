@@ -14,7 +14,7 @@
                 <div class="header">
                     <div class="month-navigation">
                         <button class="nav-button" id="prev-month">‹</button>
-                        <h2 class="month-title" id="current-month">Май 2023</h2>
+                        <h2 class="month-title" id="current-month"></h2>
                         <button class="nav-button" id="next-month">›</button>
                     </div>
                     <button class="add-button" id="add-appointment">
@@ -31,22 +31,63 @@
         <div id="add-modal" class="modal">
             <div class="modal-content">
                 <h3>Новая запись</h3>
-
                 <div class="form-group">
                     <label for="appointment-date">Дата</label>
                     <input type="date" id="appointment-date" required />
                 </div>
-
                 <div class="form-group">
                     <label for="appointment-time">Время</label>
                     <select id="appointment-time" required>
                         <option value="">Выберите время</option>
                         <option value="10:00">10:00</option>
-                        <!-- Другие варианты времени -->
+                        <option value="11:00">11:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="13:00">13:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                        <option value="18:00">18:00</option>
+                        <option value="19:00">19:00</option>
                     </select>
                 </div>
-
-                <!-- Остальные поля формы -->
+                <div class="form-group">
+                    <label for="client-name">Имя клиента</label>
+                    <input
+                        type="text"
+                        id="client-name"
+                        placeholder="Введите имя"
+                        required
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="client-phone">Телефон</label>
+                    <input
+                        type="tel"
+                        id="client-phone"
+                        placeholder="Введите телефон"
+                        required
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="service">Услуга</label>
+                    <select id="service" required>
+                        <option value="">Выберите услугу</option>
+                        <option value="1">
+                            Классический маникюр (1000 руб.)
+                        </option>
+                        <option value="2">Покрытие гель-лак (1500 руб.)</option>
+                        <option value="3">
+                            Наращивание ногтей (2500 руб.)
+                        </option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button class="cancel-btn" id="cancel-form">Отмена</button>
+                    <button class="save-btn" id="save-appointment">
+                        Сохранить
+                    </button>
+                </div>
             </div>
         </div>
     </body>
