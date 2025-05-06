@@ -39,8 +39,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function renderAppointmentsTable() {
+    console.log("Rendering table...");
     const container = document.getElementById("appointments-table-container");
-    if (!container) return;
+    if (!container) {
+        console.error("Table container not found in DOM!");
+        return;
+    }
 
     // Очищаем контейнер перед рендерингом
     container.innerHTML = "";
