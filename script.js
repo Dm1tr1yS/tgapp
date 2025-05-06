@@ -40,31 +40,23 @@ function renderAppointmentsTable() {
     const container = document.getElementById("appointments-table-container");
     if (!container) return;
 
-    const monthNames = [
-        "Январь",
-        "Февраль",
-        "Март",
-        "Апрель",
-        "Май",
-        "Июнь",
-        "Июль",
-        "Август",
-        "Сентябрь",
-        "Октябрь",
-        "Ноябрь",
-        "Декабрь",
-    ];
+    // Очищаем контейнер перед рендерингом
+    container.innerHTML = "";
 
-    // Установка текущего месяца
-    document.getElementById("current-month").textContent = `${
-        monthNames[state.currentDate.getMonth()]
-    } ${state.currentDate.getFullYear()}`;
+    const table = document.createElement("table");
+    table.className = "appointments-table";
 
-    // Генерация таблицы
-    let tableHTML =
-        '<table class="appointments-table"><thead><tr><th class="time-column">Время</th>';
+    // Создаем шапку таблицы
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
 
-    // Заголовки с датами
+    // Колонка времени
+    const timeHeader = document.createElement("th");
+    timeHeader.className = "time-column";
+    timeHeader.textContent = "Время";
+    headerRow.appendChild(timeHeader);
+
+    // Колонки с датами
     const daysInMonth = new Date(
         state.currentDate.getFullYear(),
         state.currentDate.getMonth() + 1,
@@ -80,22 +72,35 @@ function renderAppointmentsTable() {
         const dayOfWeek = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"][
             date.getDay()
         ];
-        tableHTML += `
-            <th>
-                <div class="date-header">
-                    <div class="date-day">${day}</div>
-                    <div class="date-weekday">${dayOfWeek}</div>
-                </div>
-            </th>`;
+
+        const th = document.createElement("th");
+        th.innerHTML = `
+            <div class="date-header">
+                <div class="date-day">${day}</div>
+                <div class="date-weekday">${dayOfWeek}</div>
+            </div>
+        `;
+        headerRow.appendChild(th);
     }
 
-    tableHTML += "</tr></thead><tbody>";
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Тело таблицы
+    const tbody = document.createElement("tbody");
 
     // Строки с временами
     for (let hour = 10; hour <= 19; hour++) {
         const time = `${hour}:00`;
-        tableHTML += `<tr><td class="time-column">${time}</td>`;
+        const row = document.createElement("tr");
 
+        // Ячейка времени
+        const timeCell = document.createElement("td");
+        timeCell.className = "time-column";
+        timeCell.textContent = time;
+        row.appendChild(timeCell);
+
+        // Ячейки с записями
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${state.currentDate.getFullYear()}-${String(
                 state.currentDate.getMonth() + 1
@@ -104,25 +109,27 @@ function renderAppointmentsTable() {
                 (a) => a.date === dateStr && a.time === time
             );
 
+            const cell = document.createElement("td");
+            cell.className = "appointment-cell";
+
             if (appointment) {
-                tableHTML += `
-                    <td class="appointment-cell">
-                        <div class="appointment-info">
-                            <div class="client-name">${appointment.clientName}</div>
-                            <div class="service-name">${appointment.serviceName}</div>
-                            <div>${appointment.price} руб.</div>
-                        </div>
-                    </td>`;
-            } else {
-                tableHTML += `<td class="empty-cell"></td>`;
+                cell.innerHTML = `
+                    <div class="appointment-info">
+                        <div class="client-name">${appointment.clientName}</div>
+                        <div class="service-name">${appointment.serviceName}</div>
+                        <div>${appointment.price} руб.</div>
+                    </div>
+                `;
             }
+
+            row.appendChild(cell);
         }
 
-        tableHTML += "</tr>";
+        tbody.appendChild(row);
     }
 
-    tableHTML += "</tbody></table>";
-    container.innerHTML = tableHTML;
+    table.appendChild(tbody);
+    container.appendChild(table);
 }
 
 function setupEventListeners() {
