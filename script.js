@@ -19,6 +19,8 @@ const state = {
         { id: 2, name: "Покрытие гель-лак", price: 1500 },
         { id: 3, name: "Наращивание ногтей", price: 2500 },
     ],
+    editingAppointment: null,
+    editMode: false,
 };
 
 // Инициализация приложения
@@ -63,24 +65,39 @@ function renderAppointmentsTable() {
         0
     ).getDate();
 
+    // Ячейки с записями
     for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(
-            state.currentDate.getFullYear(),
-            state.currentDate.getMonth(),
-            day
+        const dateStr = `${state.currentDate.getFullYear()}-${String(
+            state.currentDate.getMonth() + 1
+        ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const appointment = state.appointments.find(
+            (a) => a.date === dateStr && a.time === time
         );
-        const dayOfWeek = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"][
-            date.getDay()
-        ];
 
-        const th = document.createElement("th");
-        th.innerHTML = `
-            <div class="date-header">
-                <div class="date-day">${day}</div>
-                <div class="date-weekday">${dayOfWeek}</div>
-            </div>
-        `;
-        headerRow.appendChild(th);
+        const cell = document.createElement("td");
+        cell.className = "appointment-cell";
+        cell.dataset.date = dateStr;
+        cell.dataset.time = time;
+
+        if (appointment) {
+            cell.innerHTML = `
+                <div class="appointment-info">
+                    <div class="client-name">${appointment.clientName}</div>
+                    <div class="service-name">${appointment.serviceName}</div>
+                    <div>${appointment.price} руб.</div>
+                </div>
+            `;
+
+            // Добавляем обработчик клика
+            cell.addEventListener("click", (e) => {
+                if (state.editMode) return;
+
+                e.stopPropagation();
+                showEditButton(cell, appointment);
+            });
+        }
+
+        row.appendChild(cell);
     }
 
     thead.appendChild(headerRow);
@@ -191,3 +208,117 @@ function setupEventListeners() {
             renderAppointmentsTable();
         });
 }
+
+// Новая функция для показа кнопки редактирования
+function showEditButton(cell, appointment) {
+    // Удаляем старую кнопку, если есть
+    document
+        .querySelectorAll(".edit-btn-container")
+        .forEach((el) => el.remove());
+
+    // Создаем контейнер для кнопки
+    const btnContainer = document.createElement("div");
+    btnContainer.className = "edit-btn-container";
+
+    // Позиционируем относительно ячейки
+    const rect = cell.getBoundingClientRect();
+    btnContainer.style.position = "absolute";
+    btnContainer.style.left = `${rect.left + window.scrollX}px`;
+    btnContainer.style.top = `${rect.top + window.scrollY - 40}px`;
+
+    // Создаем кнопку
+    const editBtn = document.createElement("button");
+    editBtn.className = "edit-btn";
+    editBtn.innerHTML = "✏️ Редактировать";
+
+    editBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openEditModal(appointment);
+        btnContainer.remove();
+    });
+
+    btnContainer.appendChild(editBtn);
+    document.body.appendChild(btnContainer);
+
+    // Закрываем по клику вне кнопки
+    const closeHandler = () => {
+        btnContainer.remove();
+        document.removeEventListener("click", closeHandler);
+    };
+
+    setTimeout(() => {
+        document.addEventListener("click", closeHandler);
+    }, 100);
+}
+
+// Функция для открытия модального окна редактирования
+function openEditModal(appointment) {
+    state.editingAppointment = appointment;
+    state.editMode = true;
+
+    // Заполняем форму данными
+    document.getElementById("appointment-date").value = appointment.date;
+    document.getElementById("appointment-time").value = appointment.time;
+    document.getElementById("client-name").value = appointment.clientName;
+    document.getElementById("client-phone").value = appointment.clientPhone;
+    document.getElementById("service").value = appointment.serviceId;
+    document.getElementById("notes").value = appointment.notes || "";
+
+    // Показываем модальное окно
+    document.getElementById("add-modal").style.display = "flex";
+    document.querySelector("#add-modal h3").textContent =
+        "Редактировать запись";
+}
+
+// Обновляем обработчик сохранения
+document.getElementById("save-appointment").addEventListener("click", () => {
+    const date = document.getElementById("appointment-date").value;
+    const time = document.getElementById("appointment-time").value;
+    const clientName = document.getElementById("client-name").value;
+    const clientPhone = document.getElementById("client-phone").value;
+    const serviceId = parseInt(document.getElementById("service").value);
+    const notes = document.getElementById("notes").value;
+
+    if (state.editingAppointment) {
+        // Редактируем существующую запись
+        const service = state.services.find((s) => s.id === serviceId);
+        Object.assign(state.editingAppointment, {
+            date,
+            time,
+            clientName,
+            clientPhone,
+            serviceId,
+            serviceName: service.name,
+            price: service.price,
+            notes,
+        });
+    } else {
+        // Создаем новую запись
+        const service = state.services.find((s) => s.id === serviceId);
+        const newAppointment = {
+            id: Date.now(),
+            date,
+            time,
+            clientName,
+            clientPhone,
+            serviceId,
+            serviceName: service.name,
+            price: service.price,
+            notes,
+        };
+        state.appointments.push(newAppointment);
+    }
+
+    // Закрываем модальное окно и обновляем таблицу
+    document.getElementById("add-modal").style.display = "none";
+    state.editingAppointment = null;
+    state.editMode = false;
+    renderAppointmentsTable();
+});
+
+// Обработчик отмены редактирования
+document.getElementById("cancel-form").addEventListener("click", () => {
+    state.editingAppointment = null;
+    state.editMode = false;
+    document.getElementById("add-modal").style.display = "none";
+});
