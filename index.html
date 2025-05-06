@@ -3,97 +3,64 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Мастер маникюра - записи</title>
+        <title>Запись клиентов - Маникюр</title>
         <link rel="stylesheet" href="style.css" />
-        <script src="https://telegram.org/js/telegram-web-app.js"></script>
-        <script src="script.js" defer></script>
     </head>
     <body>
         <div class="container">
-            <div id="main-view">
-                <div class="header">
-                    <div class="month-navigation">
-                        <button class="nav-button" id="prev-month">‹</button>
-                        <h2 class="month-title" id="current-month"></h2>
-                        <button class="nav-button" id="next-month">›</button>
-                    </div>
-                    <button class="add-button" id="add-appointment">
-                        + Добавить запись
-                    </button>
-                </div>
+            <header>
+                <h1>Запись клиентов</h1>
+                <button id="addAppointmentBtn" class="add-btn">
+                    + Добавить запись
+                </button>
+            </header>
 
-                <div class="table-responsive">
-                    <div id="appointments-table-container"></div>
+            <div class="table-container">
+                <div class="time-column">
+                    <div class="time-header">Время</div>
+                    <div class="time-slots"></div>
+                </div>
+                <div class="dates-container">
+                    <div class="dates-header"></div>
+                    <div class="appointments-grid"></div>
                 </div>
             </div>
         </div>
 
-        <div id="add-modal" class="modal">
+        <!-- Модальное окно для добавления/редактирования записи -->
+        <div id="appointmentModal" class="modal">
             <div class="modal-content">
-                <h3>Новая запись</h3>
-                <div class="form-group">
-                    <label for="appointment-date">Дата</label>
-                    <input type="date" id="appointment-date" required />
-                </div>
-                <div class="form-group">
-                    <label for="appointment-time">Время</label>
-                    <select id="appointment-time" required>
-                        <option value="">Выберите время</option>
-                        <option value="10:00">10:00</option>
-                        <option value="11:00">11:00</option>
-                        <option value="12:00">12:00</option>
-                        <option value="13:00">13:00</option>
-                        <option value="14:00">14:00</option>
-                        <option value="15:00">15:00</option>
-                        <option value="16:00">16:00</option>
-                        <option value="17:00">17:00</option>
-                        <option value="18:00">18:00</option>
-                        <option value="19:00">19:00</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="client-name">Имя клиента</label>
-                    <input
-                        type="text"
-                        id="client-name"
-                        placeholder="Введите имя"
-                        required
-                    />
-                </div>
-                <div class="form-group">
-                    <label for="client-phone">Телефон</label>
-                    <input
-                        type="tel"
-                        id="client-phone"
-                        placeholder="Введите телефон"
-                        required
-                    />
-                </div>
-                <div class="form-group">
-                    <label for="service">Услуга</label>
-                    <select id="service" required>
-                        <option value="">Выберите услугу</option>
-                        <option value="1">
-                            Классический маникюр (1000 руб.)
-                        </option>
-                        <option value="2">Покрытие гель-лак (1500 руб.)</option>
-                        <option value="3">
-                            Наращивание ногтей (2500 руб.)
-                        </option>
-                    </select>
-                </div>
-                <div class="form-actions">
-                    <button class="cancel-btn" id="cancel-form">Отмена</button>
-                    <button class="save-btn" id="save-appointment">
-                        Сохранить
+                <span class="close-btn">&times;</span>
+                <h2 id="modalTitle">Новая запись</h2>
+                <form id="appointmentForm">
+                    <div class="form-group">
+                        <label for="clientName">Имя клиента:</label>
+                        <input type="text" id="clientName" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="clientPhone">Номер телефона:</label>
+                        <input type="tel" id="clientPhone" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="serviceType">Услуга:</label>
+                        <input type="text" id="serviceType" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="appointmentDate">Дата:</label>
+                        <input type="date" id="appointmentDate" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="appointmentTime">Время:</label>
+                        <select id="appointmentTime" required></select>
+                    </div>
+                    <button type="submit" class="save-btn">Сохранить</button>
+                    <button type="button" id="deleteBtn" class="delete-btn">
+                        Удалить запись
                     </button>
-                </div>
+                </form>
             </div>
         </div>
-        <div
-            id="modal-backdrop"
-            class="modal-backdrop"
-            style="display: none"
-        ></div>
+
+        <script src="script.js"></script>
     </body>
 </html>
