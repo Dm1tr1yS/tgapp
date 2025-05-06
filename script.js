@@ -23,32 +23,26 @@ const state = {
     editMode: false,
 };
 
-// Инициализация приложения
-document.addEventListener("DOMContentLoaded", () => {
-    // Проверка загрузки
-    console.log("Приложение инициализировано");
-
-    // Инициализация Telegram WebApp
-    if (window.Telegram && Telegram.WebApp) {
-        Telegram.WebApp.expand();
-        console.log("Telegram WebApp инициализирован");
-    }
-
-    renderAppointmentsTable();
-    setupEventListeners();
-});
+// Добавляем эту функцию в начало файла
+function formatDate(date) {
+    const d = new Date(date);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+        2,
+        "0"
+    )}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 function renderAppointmentsTable() {
+    console.log("Начало рендеринга таблицы");
     const container = document.getElementById("appointments-table-container");
     if (!container) {
-        console.error("Error: Table container not found");
+        console.error("Ошибка: Контейнер таблицы не найден");
         return;
     }
 
     // Очищаем контейнер
     container.innerHTML = "";
 
-    // Создаем элементы через DOM API для надежности
     const table = document.createElement("table");
     table.className = "appointments-table";
 
@@ -62,28 +56,27 @@ function renderAppointmentsTable() {
     timeHeader.textContent = "Время";
     headerRow.appendChild(timeHeader);
 
-    // Добавляем даты в шапку
+    // Получаем количество дней в месяце
     const daysInMonth = new Date(
         state.currentDate.getFullYear(),
         state.currentDate.getMonth() + 1,
         0
     ).getDate();
+    console.log(`Дней в месяце: ${daysInMonth}`);
 
+    // Добавляем заголовки с датами
     for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(
+            state.currentDate.getFullYear(),
+            state.currentDate.getMonth(),
+            day
+        );
         const th = document.createElement("th");
         th.innerHTML = `
             <div class="date-header">
                 <div class="date-day">${day}</div>
                 <div class="date-weekday">
-                    ${
-                        ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"][
-                            new Date(
-                                state.currentDate.getFullYear(),
-                                state.currentDate.getMonth(),
-                                day
-                            ).getDay()
-                        ]
-                    }
+                    ${["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"][date.getDay()]}
                 </div>
             </div>
         `;
@@ -96,9 +89,11 @@ function renderAppointmentsTable() {
     // Тело таблицы
     const tbody = document.createElement("tbody");
 
-    // Временные слоты (10:00 - 19:00)
+    // Генерируем временные слоты (10:00 - 19:00)
     for (let hour = 10; hour <= 19; hour++) {
-        const time = `${hour}:00`;
+        const time = `${hour}:00`; // Определяем time здесь!
+        console.log(`Обработка времени: ${time}`);
+
         const row = document.createElement("tr");
 
         // Ячейка времени
@@ -109,23 +104,25 @@ function renderAppointmentsTable() {
 
         // Ячейки с записями
         for (let day = 1; day <= daysInMonth; day++) {
-            const dateStr = formatDate(
-                new Date(
-                    state.currentDate.getFullYear(),
-                    state.currentDate.getMonth(),
-                    day
-                )
+            const currentDate = new Date(
+                state.currentDate.getFullYear(),
+                state.currentDate.getMonth(),
+                day
             );
+            const dateStr = formatDate(currentDate);
 
             const cell = document.createElement("td");
             cell.className = "appointment-cell";
 
-            // Поиск записи
+            // Ищем запись для этой даты и времени
             const appointment = state.appointments.find(
                 (a) => a.date === dateStr && a.time === time
             );
 
             if (appointment) {
+                console.log(
+                    `Найдена запись: ${appointment.clientName} в ${dateStr} ${time}`
+                );
                 cell.innerHTML = `
                     <div class="appointment-info">
                         <div class="client-name">${appointment.clientName}</div>
@@ -143,13 +140,19 @@ function renderAppointmentsTable() {
 
     table.appendChild(tbody);
     container.appendChild(table);
-    console.log("Table rendered successfully");
+    console.log("Таблица успешно отрендерена");
 }
 
-// Вспомогательная функция
-function formatDate(date) {
-    return date.toISOString().split("T")[0];
-}
+// Инициализация приложения
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("Документ загружен");
+
+    // Проверка состояния
+    console.log("Текущее состояние:", state);
+
+    renderAppointmentsTable();
+    setupEventListeners();
+});
 
 function setupEventListeners() {
     // Навигация по месяцам
